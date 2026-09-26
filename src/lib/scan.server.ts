@@ -50,7 +50,7 @@ export type Finding = {
 function rootDomain(host: string) {
   const parts = host.replace(/^www\./, "").split(".");
   const twoLevel = ["co", "com", "gov", "org", "edu", "net", "it", "ac"];
-  if (parts.length > 2 && twoLevel.includes(parts[parts.length - 2])) return parts.slice(-3).join(".");
+  if (parts.length > 2 && twoLevel.includes(parts[parts.length - 2] ?? "")) return parts.slice(-3).join(".");
   return parts.slice(-2).join(".");
 }
 
@@ -216,7 +216,7 @@ export async function analyzeSite(input: string) {
     if (finalUrl.startsWith("https://") && /(src|href)=["']http:\/\//i.test(html)) add({ id: "mixed", category: "seguranca", severity: "medio", title: "Conteúdo misto", detail: "Recursos carregados por HTTP numa página HTTPS." });
     if (/<form[^>]*action=["']http:\/\//i.test(html)) add({ id: "form-http", category: "seguranca", severity: "critico", title: "Formulário envia dados sem cifra", detail: "Um formulário submete para um endereço HTTP." });
     const jq = /jquery[.-]?(\d)\.(\d+)/i.exec(html);
-    if (jq && (+jq[1] < 3 || (+jq[1] === 3 && +jq[2] < 5))) add({ id: "jquery", category: "seguranca", severity: "alto", title: `jQuery desatualizado (${jq[1]}.${jq[2]})`, detail: "Versões antigas têm vulnerabilidades XSS conhecidas." });
+    if (jq && (Number(jq[1]) < 3 || (Number(jq[1]) === 3 && Number(jq[2]) < 5))) add({ id: "jquery", category: "seguranca", severity: "alto", title: `jQuery desatualizado (${jq[1]}.${jq[2]})`, detail: "Versões antigas têm vulnerabilidades XSS conhecidas." });
     if (generator) add({ id: "gen", category: "servidor", severity: /\d/.test(generator) ? "medio" : "baixo", title: "CMS identificado", detail: `Gerador: ${generator}. Mantenha-o sempre atualizado.` });
   }
 

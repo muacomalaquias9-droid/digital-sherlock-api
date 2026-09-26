@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function AdBar() {
   const [ad, setAd] = useState(() => adOfTheDay());
+  if (!ad) return null;
   useEffect(() => {
     setAd(adOfTheDay());
     const t = setTimeout(() => setAd(adOfTheDay()), msUntilNextAd() + 500);

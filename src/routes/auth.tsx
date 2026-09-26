@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppIcon } from "@/components/AppIcon";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({ mode: s.mode === "signup" ? ("signup" as const) : ("login" as const) }),
+  validateSearch: (s: Record<string, unknown>) => ({ mode: s["mode"] === "signup" ? ("signup" as const) : ("login" as const) }),
   head: () => ({
     meta: [
       { title: "Entrar ou criar conta — GuardaWeb" },
@@ -68,7 +68,7 @@ function AuthPage() {
     const r = await lookupDocument({ data: { type: f.doc_type, number: f.doc_number.trim() } });
     if (!r.ok) { setLookup("fail"); toast.error(r.error); return; }
     setLookup("ok");
-    const bd = toIsoDate(r.data.birthDate);
+    const bd = toIsoDate(r.data.birthDate ?? "");
     setF((p) => ({
       ...p,
       full_name: r.data.name || p.full_name,
@@ -89,7 +89,7 @@ function AuthPage() {
         navigate({ to: "/painel" });
       } else {
         const parsed = signupSchema.safeParse(f);
-        if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+        if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos");
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,

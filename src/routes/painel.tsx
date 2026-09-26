@@ -13,7 +13,7 @@ import type { ScanResult, Finding } from "@/lib/scan.server";
 import { AppIcon } from "@/components/AppIcon";
 
 export const Route = createFileRoute("/painel")({
-  validateSearch: (s: Record<string, unknown>) => ({ url: typeof s.url === "string" ? s.url : undefined }),
+  validateSearch: (s: Record<string, unknown>): { url?: string } => (typeof s["url"] === "string" ? { url: s["url"] } : {}),
   head: () => ({
     meta: [
       { title: "Painel — GuardaWeb" },
@@ -91,7 +91,7 @@ const catMeta = {
   spam: { icon: UserX, label: "Spam & Phishing", tone: "amber" },
 } as const;
 
-function Scanner({ initialUrl, onReport }: { initialUrl?: string; onReport: () => void }) {
+function Scanner({ initialUrl, onReport }: { initialUrl?: string | undefined; onReport: () => void }) {
   const scan = useServerFn(runScan);
   const [url, setUrl] = useState(initialUrl ?? "");
   const [busy, setBusy] = useState(false);
@@ -103,7 +103,7 @@ function Scanner({ initialUrl, onReport }: { initialUrl?: string; onReport: () =
     setResult(null);
     const r = await scan({ data: { url: target } }).catch((e) => ({ ok: false as const, error: String(e.message ?? e) }));
     setBusy(false);
-    if (!r.ok) return toast.error(r.error);
+    if (!r.ok) { toast.error(r.error); return; }
     setResult(r.result);
   }
   useEffect(() => { if (initialUrl) go(initialUrl); }, []); // eslint-disable-line
@@ -125,11 +125,11 @@ function Scanner({ initialUrl, onReport }: { initialUrl?: string; onReport: () =
 export function Report({ r, onReport }: { r: ScanResult; onReport?: () => void }) {
   const tone = r.score >= 80 ? "text-success" : r.score >= 50 ? "text-warning" : "text-destructive";
   const counts = (s: Finding["severity"]) => r.findings.filter((f) => f.severity === s).length;
-  const verdictUi = {
+  const verdictUi = ({
     legitimo: { icon: ShieldCheck, tone: "green", t: "Parece legítimo" },
     suspeito: { icon: AlertTriangle, tone: "amber", t: "Suspeito" },
     perigoso: { icon: ShieldAlert, tone: "red", t: "Perigoso — spam/burla" },
-  }[r.spam.verdict as "legitimo" | "suspeito" | "perigoso"];
+  } as const)[r.spam.verdict as "legitimo" | "suspeito" | "perigoso"];
 
   return (
     <div className="mt-8 space-y-6">
@@ -210,11 +210,11 @@ function ReportForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (f.description.trim().length < 10) return toast.error("Descreva o problema (mín. 10 caracteres)");
+    if (f.description.trim().length < 10) { toast.error("Descreva o problema (mín. 10 caracteres)"); return; }
     setBusy(true);
     const r = await send({ data: f }).catch((err) => ({ ok: false as const, error: String(err.message ?? err) }));
     setBusy(false);
-    if (!r.ok) return toast.error(r.error);
+    if (!r.ok) { toast.error(r.error); return; }
     setDone(r);
     toast.success("Denúncia registada");
   }

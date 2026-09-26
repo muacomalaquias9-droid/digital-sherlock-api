@@ -11,7 +11,7 @@ export const ADS = [
 /** Changes every 24h (UTC day). */
 export function adOfTheDay(now = Date.now()) {
   const day = Math.floor(now / 86400000);
-  return ADS[day % ADS.length];
+  return ADS[day % ADS.length]!;
 }
 
 export function msUntilNextAd(now = Date.now()) {
