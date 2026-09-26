@@ -7,12 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function AdBar() {
   const [ad, setAd] = useState(() => adOfTheDay());
-  if (!ad) return null;
   useEffect(() => {
     setAd(adOfTheDay());
     const t = setTimeout(() => setAd(adOfTheDay()), msUntilNextAd() + 500);
     return () => clearTimeout(t);
   }, [ad]);
+  if (!ad) return null;
   return (
     <div className="bg-navy text-primary-foreground">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5 text-sm">

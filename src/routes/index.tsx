@@ -45,7 +45,7 @@ function Home() {
               diretamente a quem o registou e alojou.
             </p>
             <form
-              onSubmit={(e) => { e.preventDefault(); navigate({ to: "/painel", search: { url: url || undefined } }); }}
+              onSubmit={(e) => { e.preventDefault(); navigate({ to: "/painel", search: url ? { url } : {} }); }}
               className="mt-8 flex max-w-xl gap-2 rounded-2xl border-2 border-foreground/80 bg-background p-2"
             >
               <Search className="ml-2 mt-3 shrink-0 text-muted-foreground" size={22} strokeWidth={2.75} />
