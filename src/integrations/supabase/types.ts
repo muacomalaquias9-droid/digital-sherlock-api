@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          age: number | null
+          birth_date: string | null
+          company_name: string
+          created_at: string
+          doc_number: string
+          doc_type: string
+          email: string
+          full_name: string
+          id: string
+        }
+        Insert: {
+          age?: number | null
+          birth_date?: string | null
+          company_name?: string
+          created_at?: string
+          doc_number?: string
+          doc_type?: string
+          email?: string
+          full_name?: string
+          id: string
+        }
+        Update: {
+          age?: number | null
+          birth_date?: string | null
+          company_name?: string
+          created_at?: string
+          doc_number?: string
+          doc_type?: string
+          email?: string
+          full_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          abuse_email: string | null
+          category: string
+          created_at: string
+          description: string
+          domain: string
+          id: string
+          registrar: string | null
+          status: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          abuse_email?: string | null
+          category: string
+          created_at?: string
+          description: string
+          domain: string
+          id?: string
+          registrar?: string | null
+          status?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          abuse_email?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          domain?: string
+          id?: string
+          registrar?: string | null
+          status?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scans: {
+        Row: {
+          created_at: string
+          id: string
+          result: Json
+          score: number
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          result?: Json
+          score?: number
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          result?: Json
+          score?: number
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
