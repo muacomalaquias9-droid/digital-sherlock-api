@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      login_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip: string
+          reason: string | null
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip: string
+          reason?: string | null
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip?: string
+          reason?: string | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -112,6 +139,27 @@ export type Database = {
           result?: Json
           score?: number
           url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions_ip: {
+        Row: {
+          country: string | null
+          ip: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country?: string | null
+          ip: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country?: string | null
+          ip?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
