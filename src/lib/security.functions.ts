@@ -87,12 +87,9 @@ export const securityOverview = createServerFn({ method: "POST" })
 
 export const auditOwnSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ origin: z.string().url().max(200) }).parse(d))
-  .handler(async ({ data }) => {
-    const host = new URL(data.origin).hostname;
-    if (!/\.lovable\.app$/.test(host)) return { ok: false as const, error: "A auditoria só funciona no site publicado." };
+  .handler(async () => {
     try {
-      return { ok: true as const, result: await analyzeSite(data.origin) };
+      return { ok: true as const, result: await analyzeSite("https://digital-sherlock-api.lovable.app") };
     } catch (e) {
       return { ok: false as const, error: (e as Error).message };
     }
