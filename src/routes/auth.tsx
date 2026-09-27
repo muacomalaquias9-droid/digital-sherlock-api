@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, IdCard, CheckCircle2, UserPlus, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupDocument } from "@/lib/scan.functions";
+import { secureLogin } from "@/lib/security.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { AppIcon } from "@/components/AppIcon";
 
@@ -84,7 +85,9 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email: f.email.trim(), password: f.password });
+        const r = await secureLogin({ data: { email: f.email.trim(), password: f.password } });
+        if (!r.ok) throw new Error(r.error);
+        const { error } = await supabase.auth.setSession({ access_token: r.access_token, refresh_token: r.refresh_token });
         if (error) throw error;
         navigate({ to: "/painel" });
       } else {
@@ -99,7 +102,8 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        if (!data.session) toast.success("Conta criada! Confirme o seu e-mail para entrar.", { duration: 8000 });
+        if (data.session) { toast.success("Conta criada com sucesso!"); navigate({ to: "/painel" }); }
+        else toast.success("Conta criada! Já pode entrar.");
       }
     } catch (err) {
       const m = (err as Error).message;
@@ -142,7 +146,7 @@ function AuthPage() {
                   {lookup === "loading" ? <Loader2 className="animate-spin" size={20} /> : lookup === "ok" ? <CheckCircle2 size={20} strokeWidth={2.75} /> : "Validar"}
                 </button>
               </div>
-              {lookup === "loading" && <p className="mt-2 text-xs text-muted-foreground">A consultar o documento… (pode demorar até 40 s na primeira vez)</p>}
+              {lookup === "loading" && <p className="mt-2 text-xs text-muted-foreground">A consultar o documento… na base da AGT</p>}
               {lookup === "fail" && <p className="mt-2 text-xs text-destructive">Não encontrado — preencha os dados manualmente.</p>}
             </div>
             <Field label="Nome completo"><input className={input} value={f.full_name} onChange={(e) => set("full_name", e.target.value)} /></Field>
