@@ -1,14 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Radar, Flag, History, UserRound, Loader2, ShieldAlert, ShieldCheck, TrendingUp, Globe, Server, Bug, AlertTriangle,
-  CheckCircle2, Lock, UserX, Mail, Printer, Trash2,
+  CheckCircle2, Lock, UserX, Mail, Printer, Trash2, LayoutDashboard, Fingerprint, LogOut, Wifi, XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { runScan, submitReport } from "@/lib/scan.functions";
+import { checkSessionIp, securityOverview, auditOwnSite } from "@/lib/security.functions";
 import type { ScanResult, Finding } from "@/lib/scan.server";
 import { AppIcon } from "@/components/AppIcon";
 
@@ -26,19 +27,51 @@ export const Route = createFileRoute("/painel")({
   component: Painel,
 });
 
-type Tab = "scan" | "report" | "history" | "profile";
+type Tab = "home" | "scan" | "report" | "history" | "security" | "profile";
+const NAV = [
+  { id: "home", icon: LayoutDashboard, label: "Visão geral" },
+  { id: "scan", icon: Radar, label: "Scanner" },
+  { id: "report", icon: Flag, label: "Denunciar" },
+  { id: "history", icon: History, label: "Histórico" },
+  { id: "security", icon: Fingerprint, label: "Segurança" },
+  { id: "profile", icon: UserRound, label: "Perfil" },
+] as const;
 
 function Painel() {
   const { user, loading } = useAuth();
   const { url } = Route.useSearch();
-  const [tab, setTab] = useState<Tab>("scan");
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<Tab>(url ? "scan" : "home");
+  const checkIp = useServerFn(checkSessionIp);
+  const [ipState, setIpState] = useState<{ ip: string; country?: string | null } | null>(null);
 
-  if (loading) return <div className="grid place-items-center py-32"><Loader2 className="animate-spin text-primary" size={40} /></div>;
+  async function signOut() {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+  }
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    const run = async () => {
+      const r = await checkIp().catch(() => null);
+      if (!alive || !r) return;
+      if (!r.ok) {
+        toast.error(r.reason === "vpn" ? "VPN/proxy detetado — sessão terminada por segurança." : "O seu IP mudou — sessão terminada por segurança. Entre novamente.", { duration: 9000 });
+        signOut();
+      } else setIpState({ ip: r.ip, country: r.country });
+    };
+    run();
+    const t = setInterval(run, 60_000);
+    return () => { alive = false; clearInterval(t); };
+  }, [user]); // eslint-disable-line
+
+  if (loading) return <div className="grid min-h-screen place-items-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
   if (!user)
     return (
       <div className="mx-auto max-w-md px-4 py-24 text-center">
         <AppIcon icon={Lock} size="xl" className="mx-auto" />
-        <h1 className="mt-8 text-3xl font-extrabold">Entre para usar o scanner</h1>
+        <h1 className="mt-8 text-3xl font-extrabold">Entre para usar o painel</h1>
         <p className="mt-2 text-muted-foreground">As análises e denúncias ficam guardadas na sua conta.</p>
         <div className="mt-6 flex justify-center gap-3">
           <Link to="/auth" search={{ mode: "login" }} className="rounded-xl border-2 border-border px-5 py-3 font-bold">Entrar</Link>
@@ -47,29 +80,152 @@ function Painel() {
       </div>
     );
 
-  const tabs = [
-    { id: "scan", icon: Radar, label: "Scanner", tone: "blue" },
-    { id: "report", icon: Flag, label: "Denunciar", tone: "red" },
-    { id: "history", icon: History, label: "Histórico", tone: "navy" },
-    { id: "profile", icon: UserRound, label: "Perfil", tone: "sky" },
-  ] as const;
-
+  const current = NAV.find((n) => n.id === tab)!;
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="grid grid-cols-4 gap-3 sm:flex sm:gap-6">
-        {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`flex flex-col items-center gap-2 rounded-3xl p-2 transition ${tab === t.id ? "" : "opacity-50 hover:opacity-80"}`}>
-            <AppIcon icon={t.icon} tone={t.tone} size="lg" />
-            <span className={`text-sm font-bold ${tab === t.id ? "text-primary" : ""}`}>{t.label}</span>
+    <div className="flex min-h-screen bg-muted/40">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-navy text-primary-foreground lg:flex print:hidden">
+        <Link to="/" className="flex items-center gap-2.5 px-6 py-6">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary"><ShieldCheck size={22} strokeWidth={2.75} /></span>
+          <span className="font-display text-xl font-extrabold">GuardaWeb</span>
+        </Link>
+        <nav className="flex-1 space-y-1 px-3">
+          {NAV.map((n) => (
+            <button key={n.id} onClick={() => setTab(n.id)} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-semibold transition ${tab === n.id ? "bg-primary" : "opacity-70 hover:bg-primary-foreground/10 hover:opacity-100"}`}>
+              <n.icon size={20} strokeWidth={2.5} /> {n.label}
+            </button>
+          ))}
+        </nav>
+        <div className="m-3 rounded-xl bg-primary-foreground/10 p-4 text-xs">
+          <p className="flex items-center gap-2 font-bold"><Wifi size={14} /> Ligação protegida</p>
+          <p className="mt-1 opacity-70">{ipState ? `${ipState.ip}${ipState.country ? " · " + ipState.country : ""}` : "A verificar IP…"}</p>
+        </div>
+        <button onClick={signOut} className="mx-3 mb-4 flex items-center gap-3 rounded-xl px-4 py-3 font-semibold opacity-70 hover:bg-primary-foreground/10 hover:opacity-100"><LogOut size={20} /> Sair</button>
+      </aside>
+
+      <div className="min-w-0 flex-1 pb-24 lg:pb-0">
+        <header className="sticky top-0 z-30 flex items-center gap-4 border-b border-border bg-card/90 px-5 py-4 backdrop-blur print:hidden sm:px-8">
+          <h1 className="text-2xl font-extrabold">{current.label}</h1>
+          <span className="ml-auto hidden text-sm text-muted-foreground sm:block">{user.email}</span>
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-primary font-bold text-primary-foreground">{(user.email ?? "?")[0]!.toUpperCase()}</span>
+        </header>
+        <div className="px-5 py-8 sm:px-8">
+          {tab === "home" && <Overview go={setTab} />}
+          {tab === "scan" && <Scanner initialUrl={url} onReport={() => setTab("report")} />}
+          {tab === "report" && <ReportForm />}
+          {tab === "history" && <HistoryView />}
+          {tab === "security" && <SecurityView />}
+          {tab === "profile" && <Profile />}
+        </div>
+      </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-border bg-card lg:hidden print:hidden">
+        {NAV.map((n) => (
+          <button key={n.id} onClick={() => setTab(n.id)} className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-bold ${tab === n.id ? "text-primary" : "text-muted-foreground"}`}>
+            <n.icon size={22} strokeWidth={2.5} /> {n.label.split(" ")[0]}
           </button>
         ))}
+      </nav>
+    </div>
+  );
+}
+
+function Overview({ go }: { go: (t: Tab) => void }) {
+  const [st, setSt] = useState<{ scans: number; reports: number; avg: number; recent: { url: string; score: number; created_at: string }[] } | null>(null);
+  useEffect(() => {
+    Promise.all([
+      supabase.from("scans").select("url,score,created_at").order("created_at", { ascending: false }).limit(100),
+      supabase.from("reports").select("id", { count: "exact", head: true }),
+    ]).then(([s, r]) => {
+      const list = s.data ?? [];
+      setSt({ scans: list.length, reports: r.count ?? 0, avg: list.length ? Math.round(list.reduce((a, b) => a + b.score, 0) / list.length) : 0, recent: list.slice(0, 5) });
+    });
+  }, []);
+  if (!st) return <Loader2 className="animate-spin text-primary" />;
+  const cards = [
+    { l: "Análises feitas", v: st.scans, icon: Radar, tone: "blue" },
+    { l: "Pontuação média", v: st.avg, icon: TrendingUp, tone: "green" },
+    { l: "Denúncias", v: st.reports, icon: Flag, tone: "red" },
+  ] as const;
+  return (
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {cards.map((c) => (
+          <div key={c.l} className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
+            <AppIcon icon={c.icon} tone={c.tone} size="md" />
+            <div><p className="text-sm text-muted-foreground">{c.l}</p><p className="font-display text-3xl font-extrabold">{c.v}</p></div>
+          </div>
+        ))}
       </div>
-      <div className="mt-10">
-        {tab === "scan" && <Scanner initialUrl={url} onReport={() => setTab("report")} />}
-        {tab === "report" && <ReportForm />}
-        {tab === "history" && <HistoryView />}
-        {tab === "profile" && <Profile />}
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <section className="rounded-2xl border border-border bg-card p-6">
+          <div className="flex items-center justify-between"><h2 className="text-xl font-bold">Últimas análises</h2><button onClick={() => go("history")} className="text-sm font-bold text-primary">Ver tudo</button></div>
+          <ul className="mt-4 divide-y divide-border">
+            {st.recent.length === 0 && <li className="py-6 text-muted-foreground">Ainda sem análises.</li>}
+            {st.recent.map((r, i) => (
+              <li key={i} className="flex items-center gap-4 py-3">
+                <span className={`w-12 font-display text-2xl font-extrabold ${r.score >= 80 ? "text-success" : r.score >= 50 ? "text-warning" : "text-destructive"}`}>{r.score}</span>
+                <span className="min-w-0 flex-1 truncate font-semibold">{r.url}</span>
+                <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("pt-PT")}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+        <div className="space-y-3">
+          {[{ t: "scan", l: "Analisar um site", i: Radar }, { t: "report", l: "Denunciar burla", i: Flag }, { t: "security", l: "Testar o nosso site", i: Fingerprint }].map((a) => (
+            <button key={a.t} onClick={() => go(a.t as Tab)} className="flex w-full items-center gap-3 rounded-2xl bg-primary p-5 text-left font-bold text-primary-foreground transition hover:opacity-90">
+              <a.i size={22} strokeWidth={2.75} /> {a.l}
+            </button>
+          ))}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function SecurityView() {
+  const overview = useServerFn(securityOverview);
+  const audit = useServerFn(auditOwnSite);
+  const [o, setO] = useState<Awaited<ReturnType<typeof securityOverview>> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<ScanResult | null>(null);
+  useEffect(() => { overview().then(setO).catch(() => {}); }, []); // eslint-disable-line
+  async function runAudit() {
+    setBusy(true);
+    const r = await audit().catch((e) => ({ ok: false as const, error: String(e.message ?? e) }));
+    setBusy(false);
+    if (!r.ok) return toast.error(r.error);
+    setRes(r.result);
+  }
+  const vpn = o?.current.vpn || o?.current.hosting;
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">O seu IP</p><p className="font-display text-xl font-extrabold">{o?.current.ip ?? "…"}</p><p className="text-xs text-muted-foreground">{[o?.current.country, o?.current.isp].filter(Boolean).join(" · ")}</p></div>
+        <div className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">VPN / Proxy</p><p className={`flex items-center gap-2 text-xl font-extrabold ${vpn ? "text-destructive" : "text-success"}`}>{vpn ? <XCircle /> : <CheckCircle2 />}{vpn ? "Detetado" : "Não detetado"}</p></div>
+        <div className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">Proteção brute-force</p><p className="text-xl font-extrabold text-success">Ativa</p><p className="text-xs text-muted-foreground">5 falhas = bloqueio de 15 min</p></div>
+      </div>
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <h2 className="text-xl font-bold">Tentativas de login recentes</h2>
+        <ul className="mt-4 divide-y divide-border text-sm">
+          {o?.attempts.length === 0 && <li className="py-3 text-muted-foreground">Sem registos.</li>}
+          {o?.attempts.map((a, i) => (
+            <li key={i} className="flex items-center gap-3 py-2.5">
+              {a.success ? <CheckCircle2 size={18} className="text-success" /> : <XCircle size={18} className="text-destructive" />}
+              <span className="font-mono">{a.ip}</span>
+              <span className="text-muted-foreground">{a.reason}</span>
+              <span className="ml-auto text-xs text-muted-foreground">{new Date(a.created_at).toLocaleString("pt-PT")}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <AppIcon icon={Bug} tone="red" size="md" />
+          <div className="flex-1"><h2 className="text-xl font-bold">Teste de vulnerabilidades do GuardaWeb</h2><p className="text-sm text-muted-foreground">Analisa o nosso próprio site publicado: cabeçalhos, certificado, DNS e erros.</p></div>
+          <button onClick={runAudit} disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground disabled:opacity-60">{busy ? <Loader2 className="animate-spin" size={18} /> : <Radar size={18} />} Executar teste</button>
+        </div>
+        {res && <Report r={res} />}
+      </section>
     </div>
   );
 }
@@ -134,26 +290,26 @@ export function Report({ r, onReport }: { r: ScanResult; onReport?: () => void }
   return (
     <div className="mt-8 space-y-6">
       <div className="grid gap-6 md:grid-cols-[260px_1fr]">
-        <div className="rounded-3xl border-2 border-border bg-card p-6 text-center">
+        <div className="rounded-2xl border border-border bg-card p-6 text-center">
           <p className="text-sm font-bold text-muted-foreground">Pontuação</p>
           <p className={`font-display text-8xl font-extrabold ${tone}`}>{r.score}</p>
           <p className="truncate font-bold">{r.host}</p>
           <p className="text-xs text-muted-foreground">{new Date(r.scannedAt).toLocaleString("pt-PT")}</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex items-center gap-4 rounded-3xl border-2 border-border bg-card p-5">
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
             <AppIcon icon={verdictUi.icon} tone={verdictUi.tone} size="md" />
             <div><p className="text-xs font-bold text-muted-foreground">Spam / fraude ({r.spam.score}/100)</p><p className="text-lg font-bold">{verdictUi.t}</p></div>
           </div>
-          <div className="flex items-center gap-4 rounded-3xl border-2 border-border bg-card p-5">
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
             <AppIcon icon={Lock} tone={r.certificate ? "green" : "red"} size="md" />
             <div className="min-w-0"><p className="text-xs font-bold text-muted-foreground">Certificado</p><p className="truncate font-bold">{r.certificate ? `${r.certificate.issuer}` : "Não encontrado"}</p>{r.certificate && <p className="text-xs text-muted-foreground">até {r.certificate.validTo.slice(0, 10)}</p>}</div>
           </div>
-          <div className="flex items-center gap-4 rounded-3xl border-2 border-border bg-card p-5">
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
             <AppIcon icon={Globe} tone="navy" size="md" />
             <div className="min-w-0"><p className="text-xs font-bold text-muted-foreground">Domínio {r.domain}</p><p className="truncate font-bold">{r.domainInfo?.registrar ?? "Registrador desconhecido"}</p><p className="text-xs text-muted-foreground">{r.domainInfo?.created ? `criado ${r.domainInfo.created.slice(0, 10)}` : "sem dados RDAP"}{r.domainInfo?.expires ? ` · expira ${r.domainInfo.expires.slice(0, 10)}` : ""}</p></div>
           </div>
-          <div className="flex items-center gap-4 rounded-3xl border-2 border-border bg-card p-5">
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
             <AppIcon icon={Server} tone="sky" size="md" />
             <div className="min-w-0"><p className="text-xs font-bold text-muted-foreground">Servidor {r.server.ip ?? ""}</p><p className="truncate font-bold">{r.server.isp ?? "Desconhecido"}</p><p className="text-xs text-muted-foreground">{[r.server.city, r.server.country, r.server.software].filter(Boolean).join(" · ")}</p></div>
           </div>
@@ -175,7 +331,7 @@ export function Report({ r, onReport }: { r: ScanResult; onReport?: () => void }
         if (!list.length) return null;
         const m = catMeta[c];
         return (
-          <section key={c} className="rounded-3xl border-2 border-border bg-card p-6">
+          <section key={c} className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-4"><AppIcon icon={m.icon} tone={m.tone} size="md" /><h3 className="text-2xl font-bold">{m.label}</h3></div>
             <ul className="mt-5 divide-y-2 divide-border">
               {list.map((f) => (
@@ -228,7 +384,7 @@ function ReportForm() {
 
   return (
     <div className="grid gap-8 md:grid-cols-[1fr_380px]">
-      <form onSubmit={onSubmit} className="space-y-4 rounded-3xl border-2 border-border bg-card p-6">
+      <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-border bg-card p-6">
         <h2 className="text-3xl font-extrabold">Denunciar um site</h2>
         <p className="text-muted-foreground">Identificamos o registrador do domínio e a empresa de alojamento, e preparamos a denúncia para os contactos oficiais de abuso.</p>
         <input required className="w-full rounded-xl border-2 border-input bg-background px-4 py-3" placeholder="URL do site" value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} />
@@ -253,7 +409,7 @@ function ReportForm() {
             </ol>
           </div>
         ) : (
-          <div className="space-y-4 rounded-3xl border-2 border-border bg-card p-6">
+          <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-3"><CheckCircle2 className="text-success" size={28} strokeWidth={2.75} /><p className="text-lg font-bold">Denúncia registada</p></div>
             <Contact title="Registrador do domínio" name={done.registrar} email={done.registrarAbuse} href={done.registrarAbuse ? mail(done.registrarAbuse) : null} />
             <Contact title="Alojamento / servidor" name={done.hostName} email={done.hostAbuse} href={done.hostAbuse ? mail(done.hostAbuse) : null} />
@@ -350,7 +506,7 @@ function Profile() {
     ["Nome", p.full_name], ["E-mail", p.email], [p.doc_type, p.doc_number], ["Data de nascimento", p.birth_date], ["Idade", p.age], ["Empresa", p.company_name],
   ];
   return (
-    <div className="max-w-xl rounded-3xl border-2 border-border bg-card p-6">
+    <div className="max-w-xl rounded-2xl border border-border bg-card p-6">
       <div className="flex items-center gap-4"><AppIcon icon={UserRound} tone="sky" size="lg" /><h2 className="text-3xl font-extrabold">{p.full_name || "O meu perfil"}</h2></div>
       <dl className="mt-6 divide-y-2 divide-border">
         {rows.map(([k, v]) => (<div key={k} className="flex justify-between gap-4 py-3"><dt className="font-bold text-muted-foreground">{k}</dt><dd className="text-right font-semibold">{v || "—"}</dd></div>))}
