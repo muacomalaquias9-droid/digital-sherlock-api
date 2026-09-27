@@ -69,37 +69,31 @@ export const submitReport = createServerFn({ method: "POST" })
 export const lookupDocument = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ type: z.enum(["nif", "bi"]), number: z.string().trim().regex(/^[A-Za-z0-9]{6,20}$/) }).parse(d))
   .handler(async ({ data }) => {
+    const n = data.number.toUpperCase();
+    if (data.type === "bi" && !/^\d{9}[A-Z]{2}\d{3}$/.test(n)) return { ok: false as const, error: "Formato de BI inválido (ex.: 001234567LA041)" };
+    if (data.type === "nif" && !/^(\d{10}|\d{9}[A-Z]{2}\d{3})$/.test(n)) return { ok: false as const, error: "Formato de NIF inválido (10 dígitos ou nº do BI)" };
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 45000);
+    const t = setTimeout(() => ctrl.abort(), 15000);
     try {
-      const r = await fetch(`https://angolaapi.onrender.com/api/v1/validate/${data.type}/${encodeURIComponent(data.number.toUpperCase())}`, { signal: ctrl.signal });
+      // Base de contribuintes da AGT (para pessoas singulares, o NIF é o nº do BI)
+      const r = await fetch(`https://invoice.minfin.gov.ao/commonServer/common/taxpayer/get/${encodeURIComponent(n)}`, { signal: ctrl.signal });
       const j: any = await r.json().catch(() => null);
-      if (!j) return { ok: false as const, error: "Serviço de validação indisponível" };
-      const flat: Record<string, string> = {};
-      const walk = (o: any, p = "") => {
-        if (o && typeof o === "object") for (const [k, v] of Object.entries(o)) walk(v, k);
-        else if (o != null && p) flat[p.toLowerCase()] = String(o);
-      };
-      walk(j);
-      const find = (...keys: string[]) => {
-        for (const k of Object.keys(flat)) if (keys.some((x) => k.includes(x))) return flat[k];
-        return "";
-      };
-      const failed = j.success === false || j.sucess === false || j.valid === false;
-      const name = find("nome", "name", "contribuinte", "razao");
-      if (failed && !name) return { ok: false as const, error: j.message && !/status code/i.test(j.message) ? j.message : "Documento não encontrado" };
+      if (!j) return { ok: false as const, error: "Serviço da AGT indisponível" };
+      if (!j.success || !j.data) return { ok: false as const, error: "Documento não encontrado na base da AGT" };
+      const d = j.data;
+      const isCompany = /^\d{10}$/.test(n) && n.startsWith("5");
       return {
         ok: true as const,
         data: {
-          name,
-          birthDate: find("nascimento", "birth", "data_nasc"),
-          company: find("empresa", "company", "entidade", "razao_social"),
-          address: find("morada", "endereco", "address", "residencia"),
-          raw: flat,
+          name: String(d.gsmc ?? ""),
+          birthDate: "",
+          company: isCompany ? String(d.gsmc ?? "") : "",
+          address: String(d.nsrdz ?? ""),
+          status: String(d.hdzt ?? ""),
         },
       };
     } catch {
-      return { ok: false as const, error: "O serviço de validação demorou demasiado. Tente novamente." };
+      return { ok: false as const, error: "A AGT demorou demasiado. Tente novamente." };
     } finally {
       clearTimeout(t);
     }
