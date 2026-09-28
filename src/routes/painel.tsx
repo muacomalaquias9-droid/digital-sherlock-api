@@ -193,7 +193,7 @@ function SecurityView() {
     setBusy(true);
     const r = await audit().catch((e) => ({ ok: false as const, error: String(e.message ?? e) }));
     setBusy(false);
-    if (!r.ok) return toast.error(r.error);
+    if (!r.ok) { toast.error(r.error); return; }
     setRes(r.result);
   }
   const vpn = o?.current.vpn || o?.current.hosting;
@@ -260,7 +260,7 @@ function Scanner({ initialUrl, onReport }: { initialUrl?: string | undefined; on
     const r = await scan({ data: { url: target } }).catch((e) => ({ ok: false as const, error: String(e.message ?? e) }));
     setBusy(false);
     if (!r.ok) { toast.error(r.error); return; }
-    setResult(r.result);
+    setResult({ ...r.result, banned: r.banned } as ScanResult);
   }
   useEffect(() => { if (initialUrl) go(initialUrl); }, []); // eslint-disable-line
 
@@ -287,8 +287,18 @@ export function Report({ r, onReport }: { r: ScanResult; onReport?: () => void }
     perigoso: { icon: ShieldAlert, tone: "red", t: "Perigoso — spam/burla" },
   } as const)[r.spam.verdict as "legitimo" | "suspeito" | "perigoso"];
 
+  const banned = (r as ScanResult & { banned?: string | null }).banned;
   return (
     <div className="mt-8 space-y-6">
+      {banned && (
+        <div className="flex items-start gap-4 rounded-2xl border-2 border-destructive bg-destructive/10 p-5">
+          <AppIcon icon={ShieldAlert} tone="red" size="md" />
+          <div>
+            <p className="text-lg font-extrabold text-destructive">Site falso banido pela GuardaWeb</p>
+            <p className="text-sm">{banned}</p>
+          </div>
+        </div>
+      )}
       <div className="grid gap-6 md:grid-cols-[260px_1fr]">
         <div className="rounded-2xl border border-border bg-card p-6 text-center">
           <p className="text-sm font-bold text-muted-foreground">Pontuação</p>

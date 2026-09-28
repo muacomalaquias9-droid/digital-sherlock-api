@@ -9,7 +9,9 @@ export const Route = createFileRoute("/servicos")({
       { name: "description", content: "Engenharia social, engenharia de domínio, hardening de VPS, auditorias e resposta a incidentes." },
       { property: "og:title", content: "Serviços de cibersegurança — GuardaWeb" },
       { property: "og:description", content: "Engenharia social, domínios, servidores VPS e resposta a incidentes." },
+      { property: "og:url", content: "https://guardaweb.info/servicos" },
     ],
+    links: [{ rel: "canonical", href: "https://guardaweb.info/servicos" }],
   }),
   component: Services,
 });
@@ -25,12 +27,12 @@ const items = [
 
 function Services() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
-      <h1 className="text-5xl font-extrabold">Serviços</h1>
+    <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+      <h1 className="text-4xl font-extrabold sm:text-5xl">Serviços</h1>
       <p className="mt-3 max-w-2xl text-lg text-muted-foreground">Para além do scanner, a nossa equipa protege as pessoas, os domínios e os servidores da sua empresa.</p>
       <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {items.map((i) => (
-          <div key={i.t} className="flex gap-5 rounded-3xl border-2 border-border bg-card p-6">
+          <div key={i.t} className="flex gap-5 rounded-2xl border border-border bg-card p-6">
             <AppIcon icon={i.icon} tone={i.tone} size="lg" />
             <div>
               <h2 className="text-xl font-bold">{i.t}</h2>
