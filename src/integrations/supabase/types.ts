@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          reason: string
+          reports: number
+          spam_score: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          reason: string
+          reports?: number
+          spam_score?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          reason?: string
+          reports?: number
+          spam_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string
