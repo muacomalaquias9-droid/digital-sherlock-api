@@ -260,7 +260,7 @@ function Scanner({ initialUrl, onReport }: { initialUrl?: string | undefined; on
     const r = await scan({ data: { url: target } }).catch((e) => ({ ok: false as const, error: String(e.message ?? e) }));
     setBusy(false);
     if (!r.ok) { toast.error(r.error); return; }
-    setResult(r.result);
+    setResult({ ...r.result, banned: r.banned } as ScanResult);
   }
   useEffect(() => { if (initialUrl) go(initialUrl); }, []); // eslint-disable-line
 
