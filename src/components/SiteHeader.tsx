@@ -63,8 +63,8 @@ export function SiteHeader() {
             </div>
           ) : (
             <div className="ml-auto flex items-center gap-2 md:ml-0">
-              <Link to="/auth" search={{ mode: "login" }} className="rounded-xl px-4 py-2.5 font-bold hover:bg-muted">Entrar</Link>
-              <Link to="/auth" search={{ mode: "signup" }} className="rounded-xl bg-primary px-4 py-2.5 font-bold text-primary-foreground">Criar conta</Link>
+              <Link to="/auth" search={{ mode: "login" }} className="whitespace-nowrap rounded-xl px-3 py-2.5 font-bold hover:bg-muted">Entrar</Link>
+              <Link to="/auth" search={{ mode: "signup" }} className="whitespace-nowrap rounded-xl bg-primary px-4 py-2.5 font-bold text-primary-foreground">Criar conta</Link>
             </div>
           )}
         </div>
