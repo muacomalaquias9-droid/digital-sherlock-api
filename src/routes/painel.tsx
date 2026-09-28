@@ -193,7 +193,7 @@ function SecurityView() {
     setBusy(true);
     const r = await audit().catch((e) => ({ ok: false as const, error: String(e.message ?? e) }));
     setBusy(false);
-    if (!r.ok) return toast.error(r.error);
+    if (!r.ok) { toast.error(r.error); return; }
     setRes(r.result);
   }
   const vpn = o?.current.vpn || o?.current.hosting;

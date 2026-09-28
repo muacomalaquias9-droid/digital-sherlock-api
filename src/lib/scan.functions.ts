@@ -9,13 +9,24 @@ export const runScan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     try {
       const result = await analyzeSite(data.url);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const dom = result.host.replace(/^www\./, "");
+      const { data: ban } = await supabaseAdmin.from("blocked_domains").select("reason").eq("domain", dom).maybeSingle();
+      let banned = ban?.reason ?? null;
+      if (!banned && result.spam.score >= 50) {
+        banned = `Banido automaticamente: ${result.spam.reasons.slice(0, 3).join(" · ")}`;
+        await supabaseAdmin.from("blocked_domains").upsert({ domain: dom, reason: banned, spam_score: result.spam.score });
+      }
       const { data: row, error } = await context.supabase
         .from("scans")
-        .insert({ user_id: context.userId, url: result.host, score: result.score, result: result as any })
+        .insert({ user_id: context.userId, url: result.host, score: result.score, result: { ...result, banned } as any })
         .select("id")
         .single();
       if (error) console.error(error);
-      return { ok: true as const, id: row?.id ?? null, result };
+      if (banned) toastless: {
+        break toastless;
+      }
+      return { ok: true as const, id: row?.id ?? null, result, banned };
     } catch (e) {
       return { ok: false as const, error: (e as Error).message || "Falha na análise" };
     }
