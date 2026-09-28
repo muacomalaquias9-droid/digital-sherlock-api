@@ -23,9 +23,6 @@ export const runScan = createServerFn({ method: "POST" })
         .select("id")
         .single();
       if (error) console.error(error);
-      if (banned) toastless: {
-        break toastless;
-      }
       return { ok: true as const, id: row?.id ?? null, result, banned };
     } catch (e) {
       return { ok: false as const, error: (e as Error).message || "Falha na análise" };
@@ -74,6 +71,13 @@ export const submitReport = createServerFn({ method: "POST" })
       abuse_email: abuse,
     });
     if (error) return { ok: false as const, error: "Não foi possível registar a denúncia" };
+    {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { count } = await supabaseAdmin.from("reports").select("id", { count: "exact", head: true }).eq("domain", host);
+      if ((count ?? 0) >= 3) {
+        await supabaseAdmin.from("blocked_domains").upsert({ domain: host, reason: `Banido após ${count} denúncias da comunidade (${data.category})`, reports: count ?? 0, updated_at: new Date().toISOString() });
+      }
+    }
     return { ok: true as const, domain: host, registrar: rdap?.registrar ?? null, registrarAbuse: rdap?.abuseEmail ?? null, hostName, hostAbuse };
   });
 
