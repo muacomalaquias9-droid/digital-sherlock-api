@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key_hash: string
+          last_used_at: string | null
+          name: string
+          prefix: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_hash: string
+          last_used_at?: string | null
+          name?: string
+          prefix: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_hash?: string
+          last_used_at?: string | null
+          name?: string
+          prefix?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocked_domains: {
         Row: {
           created_at: string
@@ -38,6 +68,45 @@ export type Database = {
           reports?: number
           spam_score?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      hosted_sites: {
+        Row: {
+          created_at: string
+          custom_domain: string | null
+          deploys: number
+          domain_verified: boolean
+          id: string
+          name: string
+          slug: string
+          storage_used: number
+          user_id: string
+          verify_token: string
+        }
+        Insert: {
+          created_at?: string
+          custom_domain?: string | null
+          deploys?: number
+          domain_verified?: boolean
+          id?: string
+          name: string
+          slug: string
+          storage_used?: number
+          user_id: string
+          verify_token?: string
+        }
+        Update: {
+          created_at?: string
+          custom_domain?: string | null
+          deploys?: number
+          domain_verified?: boolean
+          id?: string
+          name?: string
+          slug?: string
+          storage_used?: number
+          user_id?: string
+          verify_token?: string
         }
         Relationships: []
       }
@@ -169,6 +238,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      site_files: {
+        Row: {
+          content_type: string
+          id: string
+          path: string
+          site_id: string
+          size: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_type?: string
+          id?: string
+          path: string
+          site_id: string
+          size?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          id?: string
+          path?: string
+          site_id?: string
+          size?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_files_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "hosted_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_sessions_ip: {
         Row: {
