@@ -71,7 +71,7 @@ function SiteList({ d, sel, setSel, onChange }: { d: Data; sel: string | null; s
       <form className="flex gap-2" onSubmit={async (e) => {
         e.preventDefault(); setBusy(true);
         const r = await create({ data: { name } }); setBusy(false);
-        if (!r.ok) return toast.error(r.error);
+        if (!r.ok) { toast.error(r.error); return; }
         setName(""); setSel(r.site.id); onChange();
       }}>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome do site" className="min-w-0 flex-1 rounded-xl border border-input bg-background px-3 py-2 text-sm" />
@@ -139,7 +139,7 @@ function SiteDetail({ site, files, target, origin, onChange }: { site: Data["sit
         <form className="mt-3 flex flex-col gap-2 sm:flex-row" onSubmit={async (e) => {
           e.preventDefault();
           const r = await saveDomain({ data: { siteId: site.id, domain: domain.trim() || null } });
-          if (!r.ok) return toast.error(r.error);
+          if (!r.ok) { toast.error(r.error); return; }
           toast.success("Domínio guardado"); setCheck(null); onChange();
         }}>
           <input value={domain} onChange={(e) => setDomainInput(e.target.value)} placeholder="www.meusite.ao" className="min-w-0 flex-1 rounded-xl border border-input bg-background px-3 py-2.5" />
@@ -160,7 +160,7 @@ function SiteDetail({ site, files, target, origin, onChange }: { site: Data["sit
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <button onClick={async () => {
                 const r = await verify({ data: { siteId: site.id } });
-                if (!r.ok) return toast.error(r.error);
+                if (!r.ok) { toast.error(r.error); return; }
                 setCheck(r); r.verified ? toast.success("Domínio verificado") : toast.error("DNS ainda não está correto"); onChange();
               }} className="rounded-xl border-2 border-border px-4 py-2 font-bold">Verificar DNS</button>
               {site.domain_verified
@@ -204,7 +204,7 @@ function ApiKeys({ d, origin, onChange }: { d: Data; origin: string; onChange: (
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-center gap-3">
         <h3 className="flex flex-1 items-center gap-2 text-lg font-extrabold"><KeyRound size={20} /> API pública de deploy</h3>
-        <button onClick={async () => { const r = await create({ data: { name: "Chave " + (d.keys.length + 1) } }); if (!r.ok) return toast.error(r.error); setFresh(r.key); onChange(); }} className="rounded-xl bg-primary px-4 py-2 font-bold text-primary-foreground">Nova chave</button>
+        <button onClick={async () => { const r = await create({ data: { name: "Chave " + (d.keys.length + 1) } }); if (!r.ok) { toast.error(r.error); return; } setFresh(r.key); onChange(); }} className="rounded-xl bg-primary px-4 py-2 font-bold text-primary-foreground">Nova chave</button>
       </div>
       {fresh && (
         <div className="mt-4 rounded-xl border-2 border-warning bg-warning/10 p-4">

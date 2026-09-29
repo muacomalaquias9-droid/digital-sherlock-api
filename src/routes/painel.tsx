@@ -12,6 +12,7 @@ import { runScan, submitReport } from "@/lib/scan.functions";
 import { checkSessionIp, securityOverview, auditOwnSite } from "@/lib/security.functions";
 import type { ScanResult, Finding } from "@/lib/scan.server";
 import { AppIcon } from "@/components/AppIcon";
+import { HostingView } from "@/components/HostingView";
 
 export const Route = createFileRoute("/painel")({
   validateSearch: (s: Record<string, unknown>): { url?: string } => (typeof s["url"] === "string" ? { url: s["url"] } : {}),
@@ -27,12 +28,13 @@ export const Route = createFileRoute("/painel")({
   component: Painel,
 });
 
-type Tab = "home" | "scan" | "report" | "history" | "security" | "profile";
+type Tab = "home" | "scan" | "report" | "history" | "security" | "profile" | "hosting";
 const NAV = [
   { id: "home", icon: LayoutDashboard, label: "Visão geral" },
   { id: "scan", icon: Radar, label: "Scanner" },
   { id: "report", icon: Flag, label: "Denunciar" },
   { id: "history", icon: History, label: "Histórico" },
+  { id: "hosting", icon: Server, label: "Alojamento" },
   { id: "security", icon: Fingerprint, label: "Segurança" },
   { id: "profile", icon: UserRound, label: "Perfil" },
 ] as const;
@@ -115,10 +117,11 @@ function Painel() {
           {tab === "history" && <HistoryView />}
           {tab === "security" && <SecurityView />}
           {tab === "profile" && <Profile />}
+          {tab === "hosting" && <HostingView />}
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-border bg-card lg:hidden print:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-border bg-card lg:hidden print:hidden">
         {NAV.map((n) => (
           <button key={n.id} onClick={() => setTab(n.id)} className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-bold ${tab === n.id ? "text-primary" : "text-muted-foreground"}`}>
             <n.icon size={22} strokeWidth={2.5} /> {n.label.split(" ")[0]}
