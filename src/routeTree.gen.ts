@@ -13,6 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PainelRouteImport } from './routes/painel'
 import { Route as ServicosRouteImport } from './routes/servicos'
+import { Route as HSlugSplatRouteImport } from './routes/h.$slug.$'
+import { Route as ApiPublicV1DeployRouteImport } from './routes/api/public/v1/deploy'
+import { Route as ApiPublicV1SitesRouteImport } from './routes/api/public/v1/sites'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +37,39 @@ const ServicosRoute = ServicosRouteImport.update({
   path: '/servicos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HSlugSplatRoute = HSlugSplatRouteImport.update({
+  id: '/h/$slug/$',
+  path: '/h/$slug/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1DeployRoute = ApiPublicV1DeployRouteImport.update({
+  id: '/api/public/v1/deploy',
+  path: '/api/public/v1/deploy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1SitesRoute = ApiPublicV1SitesRouteImport.update({
+  id: '/api/public/v1/sites',
+  path: '/api/public/v1/sites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/painel': typeof PainelRoute
   '/servicos': typeof ServicosRoute
+  '/h/$slug/$': typeof HSlugSplatRoute
+  '/api/public/v1/deploy': typeof ApiPublicV1DeployRoute
+  '/api/public/v1/sites': typeof ApiPublicV1SitesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/painel': typeof PainelRoute
   '/servicos': typeof ServicosRoute
+  '/h/$slug/$': typeof HSlugSplatRoute
+  '/api/public/v1/deploy': typeof ApiPublicV1DeployRoute
+  '/api/public/v1/sites': typeof ApiPublicV1SitesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +77,38 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/painel': typeof PainelRoute
   '/servicos': typeof ServicosRoute
+  '/h/$slug/$': typeof HSlugSplatRoute
+  '/api/public/v1/deploy': typeof ApiPublicV1DeployRoute
+  '/api/public/v1/sites': typeof ApiPublicV1SitesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/painel' | '/servicos'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/painel'
+    | '/servicos'
+    | '/h/$slug/$'
+    | '/api/public/v1/deploy'
+    | '/api/public/v1/sites'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/painel' | '/servicos'
-  id: '__root__' | '/' | '/auth' | '/painel' | '/servicos'
+  to:
+    | '/'
+    | '/auth'
+    | '/painel'
+    | '/servicos'
+    | '/h/$slug/$'
+    | '/api/public/v1/deploy'
+    | '/api/public/v1/sites'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/painel'
+    | '/servicos'
+    | '/h/$slug/$'
+    | '/api/public/v1/deploy'
+    | '/api/public/v1/sites'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +116,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PainelRoute: typeof PainelRoute
   ServicosRoute: typeof ServicosRoute
+  HSlugSplatRoute: typeof HSlugSplatRoute
+  ApiPublicV1DeployRoute: typeof ApiPublicV1DeployRoute
+  ApiPublicV1SitesRoute: typeof ApiPublicV1SitesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +151,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/h/$slug/$': {
+      id: '/h/$slug/$'
+      path: '/h/$slug/$'
+      fullPath: '/h/$slug/$'
+      preLoaderRoute: typeof HSlugSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/deploy': {
+      id: '/api/public/v1/deploy'
+      path: '/api/public/v1/deploy'
+      fullPath: '/api/public/v1/deploy'
+      preLoaderRoute: typeof ApiPublicV1DeployRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/sites': {
+      id: '/api/public/v1/sites'
+      path: '/api/public/v1/sites'
+      fullPath: '/api/public/v1/sites'
+      preLoaderRoute: typeof ApiPublicV1SitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +180,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PainelRoute: PainelRoute,
   ServicosRoute: ServicosRoute,
+  HSlugSplatRoute: HSlugSplatRoute,
+  ApiPublicV1DeployRoute: ApiPublicV1DeployRoute,
+  ApiPublicV1SitesRoute: ApiPublicV1SitesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
