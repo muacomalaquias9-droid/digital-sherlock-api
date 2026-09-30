@@ -1,16 +1,17 @@
-# 🚀 Guia de Deploy Automático - Digital Sherlock API
+# 🚀 Deployment Guide - Digital Sherlock API
 
-## Deploy na Vercel com guardaweb.info
+## Deploy to Vercel with guardaweb.info Domain
 
-### ✅ O que foi configurado automaticamente
+### ✅ Automatic Configuration
 
-- ✅ `vercel.json` - Configuração do domínio e variáveis de ambiente
-- ✅ `scripts/setup-vercel-env.sh` - Script para configurar variáveis do Supabase
-- ✅ Auto-deploy em cada push para `main`
+- ✅ `vercel.json` - Vercel configuration with domain and environment variables
+- ✅ `scripts/setup-vercel-env.sh` - Script to configure Supabase variables
+- ✅ Auto-deploy on every push to `main`
+- ✅ Supabase integration configured
 
 ---
 
-## 🔧 Passo 1: Instalar Vercel CLI (primeira vez)
+## 🔧 Step 1: Install Vercel CLI
 
 ```bash
 npm install -g vercel
@@ -18,76 +19,70 @@ npm install -g vercel
 
 ---
 
-## 🔑 Passo 2: Configurar Variáveis de Ambiente do Supabase
+## 🔑 Step 2: Configure Environment Variables on Vercel
 
-### Opção A: Automática (Recomendado) ⚡
+### Option A: Automatic Setup (Recommended) ⚡
 
 ```bash
 bash scripts/setup-vercel-env.sh
 ```
 
-Você será solicitado para inserir:
-1. **URL do Supabase** (ex: `https://dihzcnfysysszztyaynr.supabase.co`)
-2. **SERVICE ROLE KEY** (da aba Settings → API → Service role secret)
-3. **PUBLISHABLE KEY** (da aba Settings → API → anon public)
+You will be prompted to enter:
+1. **Supabase URL** (https://dihzcnfysysszztyaynr.supabase.co)
+2. **SERVICE ROLE KEY** (Settings → API → Service role secret)
+3. **PUBLISHABLE KEY** (Settings → API → anon public)
 
-### Opção B: Manual (Dashboard Vercel)
+### Option B: Manual Configuration
 
-1. Acesse: https://vercel.com/dashboard
-2. Selecione seu projeto `digital-sherlock-api`
-3. Vá para **Settings → Environment Variables**
-4. Adicione as 4 variáveis:
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+1. Go to: https://vercel.com/dashboard
+2. Select `digital-sherlock-api` project
+3. Navigate to **Settings → Environment Variables**
+4. Add these 4 variables for all environments (Production, Preview, Development):
+   - `SUPABASE_URL` = `https://dihzcnfysysszztyaynr.supabase.co`
+   - `SUPABASE_PUBLISHABLE_KEY` = `sb_publishable_UUrLi2EgQi0KdWPENCMcoA_G3HXXrfg`
+   - `SUPABASE_SERVICE_ROLE_KEY` = (from your Supabase dashboard)
+   - `VITE_SUPABASE_URL` = `https://dihzcnfysysszztyaynr.supabase.co`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY` = `sb_publishable_UUrLi2EgQi0KdWPENCMcoA_G3HXXrfg`
 
 ---
 
-## 📤 Passo 3: Deploy Automático
+## 📤 Step 3: Automatic Deployment
 
-Simples! Basta fazer push para a branch `main`:
+Just push to main branch:
 
 ```bash
 git add .
-git commit -m "feat: novo recurso"
+git commit -m "feat: new feature"
 git push origin main
 ```
 
-**O Vercel fará o deploy automaticamente!** 🎉
+**Vercel will automatically deploy!** 🎉
 
 ---
 
-## ✨ Passo 4: Conectar Domínio guardaweb.info (opcional)
-
-Se o domínio ainda não está conectado:
-
-1. Na dashboard do Vercel
-2. Seu projeto → **Settings → Domains**
-3. Adicione `guardaweb.info` e `www.guardaweb.info`
-4. Configure os registros DNS conforme instruído
-
----
-
-## 🔍 Verificar Status do Deploy
+## 🔍 Check Deployment Status
 
 ```bash
-# Ver deployments recentes
+# List recent deployments
 vercel ls
 
-# Ver status do último deploy
+# Check deployment details
 vercel inspect
+
+# View build logs
+vercel logs
 ```
 
 ---
 
-## 📋 Checklist Final
+## 📋 Final Checklist
 
-- [ ] Vercel CLI instalado (`vercel --version`)
-- [ ] Variáveis de ambiente configuradas
-- [ ] `git push` executado
-- [ ] Deploy concluído (check em https://vercel.com/dashboard)
-- [ ] Site acessível em `https://guardaweb.info`
+- [ ] Vercel CLI installed (`vercel --version`)
+- [ ] Environment variables configured on Vercel
+- [ ] `git push` executed
+- [ ] Deploy completed (https://vercel.com/dashboard)
+- [ ] Site accessible at `https://guardaweb.info`
+- [ ] Supabase connection working (check browser console)
 
 ---
 
@@ -95,25 +90,27 @@ vercel inspect
 
 ### ❌ "Missing Supabase environment variables"
 
-**Solução**: Rode novamente:
+**Solution**: Re-run the setup script:
 ```bash
 bash scripts/setup-vercel-env.sh
 ```
 
-### ❌ Domínio não funciona
+### ❌ Domain not working
 
-Verifique registros DNS em:
-- Seu painel de DNS do domínio
-- Confirme que aponta para `cname.vercel-dns.com`
+Check DNS settings:
+1. Go to your domain registrar
+2. Ensure DNS points to `cname.vercel-dns.com`
+3. Wait for DNS propagation (up to 48 hours)
 
-### ❌ Deploy falha na build
+### ❌ Build fails
 
-1. Verifique logs: `vercel logs`
-2. Confirme variáveis: `vercel env ls`
-3. Tente redeploy: `vercel deploy --prod`
+1. Check logs: `vercel logs`
+2. Verify variables: `vercel env ls`
+3. Redeploy: `vercel deploy --prod`
+4. Check that `.env` file has all required variables
 
 ---
 
-**Pronto! 🎉 Seu site está em deploy automático!**
+**Ready! 🎉 Your site is configured for automatic deployment!**
 
-Para mais info: https://vercel.com/docs
+More info: https://vercel.com/docs
