@@ -1,6 +1,7 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "outputDirectory": "dist/public",
+  "installCommand": "npm install",
   "env": {
     "SUPABASE_URL": "@supabase_url",
     "SUPABASE_PUBLISHABLE_KEY": "@supabase_publishable_key",
@@ -16,5 +17,16 @@
     "deploymentEnabled": {
       "main": true
     }
-  }
+  },
+  "functions": {
+    "api/**": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
 }
