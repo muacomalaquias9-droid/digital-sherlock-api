@@ -47,6 +47,18 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      const host = url.hostname.toLowerCase().replace(/^www\./, "");
+      const own = /(^|\.)lovable\.app$|(^|\.)vercel\.app$|^localhost$|^127\.|guardaweb\.info$/;
+      if (request.method === "GET" && !own.test(host)) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: site } = await supabaseAdmin
+          .from("hosted_sites").select("slug").eq("custom_domain", host).eq("domain_verified", true).maybeSingle();
+        if (site) {
+          const { serveFile } = await import("./lib/hosting.server");
+          return await serveFile(site.slug, url.pathname);
+        }
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
